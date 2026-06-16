@@ -297,7 +297,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;}
 <div id="cfgModal" class="modal-bg">
   <div class="modal">
     <h3>🔐 DB(Supabase) 연결 설정</h3>
-    <p>이 브라우저(LocalStorage)에만 저장되며 서버나 GitHub에 올라가지 않습니다.</p>
+    <p>기본 키가 코드에 박혀 있어 보통은 건드릴 일이 없습니다. 다른 Supabase 프로젝트를 임시로 가리키고 싶을 때만 입력하세요. 입력값은 이 브라우저에만 저장됩니다.</p>
     <label>Supabase Project URL</label>
     <input id="cfgUrl" type="text" placeholder="https://xxxx.supabase.co" />
     <label>Supabase Publishable / anon Key</label>
@@ -319,9 +319,14 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;}
 <script>
 /* ============================================================================
  *  PX 견적기 — Vercel 정적 호스팅 + Supabase
- *  - 키는 LocalStorage에만 저장 (코드/Git 노출 없음)
+ *  - 키는 코드에 하드코딩(취미·비민감 데이터 가정).
+ *    LocalStorage 에 override 값이 있으면 그쪽이 우선 적용됨.
  *  - PX < 인터넷/할인마트 가격 가정 (절약 금액은 항상 양수)
  * ============================================================================ */
+
+// 기본 Supabase 연결값 (LocalStorage override 가 있으면 그쪽이 우선)
+const SUPABASE_URL = "https://rdscrqmqepxjuayodwqc.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJkc2NycW1xZXB4anVheW9kd3FjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MDIwNjgsImV4cCI6MjA5NTk3ODA2OH0._5hTtsAi0jpEG8ommpdGM_XXIKP78tvBXR3YjyMXVCI";
 
 const LS_CFG     = "px_cfg";
 const LS_CART    = "px_cart";
@@ -343,24 +348,28 @@ let deletes = new Set();  // pending delete ids
 })();
 
 function getConfig(){
-  try { return JSON.parse(localStorage.getItem(LS_CFG) || "null"); } catch { return null; }
+  // LocalStorage override 가 있으면 우선, 없으면 하드코딩 기본값 사용
+  try {
+    const cfg = JSON.parse(localStorage.getItem(LS_CFG) || "null");
+    if (cfg && cfg.url && cfg.key) return cfg;
+  } catch {}
+  return { url: SUPABASE_URL, key: SUPABASE_ANON_KEY };
 }
 function setConfig(url, key){
   localStorage.setItem(LS_CFG, JSON.stringify({ url, key }));
 }
 function clearConfig(){
-  if(!confirm("저장된 DB 설정을 지울까요?")) return;
+  if(!confirm("LocalStorage 의 임시 설정을 지우고 기본 키로 돌아갑니다. 진행할까요?")) return;
   localStorage.removeItem(LS_CFG);
   sb = null; products = []; productsById = {};
   closeConfigModal();
-  toast("DB 설정을 지웠습니다");
-  reloadAll();
-  openConfigModal();
+  toast("기본 설정으로 복귀했습니다");
+  loadConfigAndConnect();
 }
 
 async function loadConfigAndConnect(){
   const cfg = getConfig();
-  if (!cfg || !cfg.url || !cfg.key) {
+  if (!cfg.url || !cfg.key) {
     openConfigModal();
     reloadAll();
     return;
