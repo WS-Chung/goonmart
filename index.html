@@ -6,6 +6,10 @@
 <meta name="theme-color" content="#0f172a" />
 <title>PX 견적기 — PX/군마트 vs 인터넷/할인마트 가격</title>
 
+<!-- Pretendard 가변 폰트 -->
+<link rel="stylesheet" as="style" crossorigin
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+
 <!-- Supabase JS SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -17,9 +21,13 @@
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
-  font-family:"Segoe UI","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
-  line-height:1.55;}
+  font-family:"Pretendard Variable","Pretendard","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+  font-weight:400;line-height:1.55;letter-spacing:-.005em;}
 .wrap{max-width:1180px;margin:0 auto;padding:24px 18px 80px;}
+
+/* 페이드 키프레임 (탭 전환·리스트 변경 공용) */
+@keyframes fadeIn{ from{opacity:0;transform:translateY(2px);} to{opacity:1;transform:none;} }
+.fade-in{animation:fadeIn .22s ease both;}
 
 /* 표지 */
 header.cover{
@@ -29,9 +37,9 @@ header.cover{
   position:relative;
 }
 header.cover .tag{display:inline-block;background:rgba(255,255,255,.12);color:#cbd5e1;
-  padding:4px 10px;border-radius:999px;font-size:11.5px;letter-spacing:.04em;}
-header.cover h1{font-size:24px;margin:12px 0 4px;letter-spacing:-.01em;}
-header.cover p.lead{margin:0;color:#cbd5e1;font-size:13.5px;}
+  padding:4px 10px;border-radius:999px;font-size:11.5px;letter-spacing:.04em;font-weight:500;}
+header.cover h1{font-size:26px;margin:12px 0 4px;letter-spacing:-.015em;font-weight:800;}
+header.cover p.lead{margin:0;color:#cbd5e1;font-size:13.5px;font-weight:400;}
 header.cover .cfg-btn{
   position:absolute;top:18px;right:18px;background:rgba(255,255,255,.1);color:#fff;
   border:1px solid rgba(255,255,255,.18);padding:6px 11px;border-radius:8px;
@@ -52,21 +60,21 @@ nav.tabs button:not(.active):hover{background:var(--soft);color:var(--ink);}
 section{background:var(--panel);border:1px solid var(--line);border-radius:14px;
   padding:18px 18px;margin:14px 0;box-shadow:0 4px 16px -10px rgba(15,23,42,.15);}
 section h2{font-size:16px;margin:0 0 4px;font-weight:700;
-  border-left:3px solid var(--accent);padding-left:10px;}
-section .sub{color:var(--muted);font-size:13px;margin:4px 0 12px;}
+  border-left:3px solid var(--accent);padding-left:10px;letter-spacing:-.01em;}
+section .sub{color:var(--muted);font-size:13px;margin:4px 0 12px;font-weight:400;}
 
 /* 절약률 패널 */
 .summary{
-  border-radius:14px;padding:20px 22px;color:#fff;transition:background .25s;
-  display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;
+  border-radius:14px;padding:26px 26px;color:#fff;transition:background .25s;
+  display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;
   background:rgb(148,163,184);box-shadow:0 8px 24px -14px rgba(15,23,42,.4);
 }
-.summary .label{font-size:11.5px;opacity:.85;text-transform:uppercase;letter-spacing:.05em;}
-.summary .pct{font-size:42px;font-weight:800;letter-spacing:-.02em;line-height:1;}
-.summary .nums{display:grid;grid-template-columns:auto auto;gap:4px 16px;font-size:13px;}
-.summary .nums .k{opacity:.85;}
+.summary .label{font-size:14.5px;opacity:.9;text-transform:uppercase;letter-spacing:.05em;font-weight:500;}
+.summary .pct{font-size:46px;font-weight:800;letter-spacing:-.02em;line-height:1;}
+.summary .nums{display:grid;grid-template-columns:auto auto;gap:6px 18px;font-size:15px;}
+.summary .nums .k{opacity:.85;font-weight:500;}
 .summary .nums .v{font-weight:700;font-variant-numeric:tabular-nums;}
-.summary .nums .v.save{color:var(--save);font-weight:800;font-size:14px;}
+.summary .nums .v.save{color:var(--save);font-weight:800;font-size:17px;}
 
 /* 입력/버튼 */
 input[type="text"],input[type="number"],select,textarea{
@@ -140,19 +148,22 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;}
 .callout code{background:#fff;border:1px solid #fed7aa;padding:1px 6px;border-radius:4px;}
 .empty-msg{text-align:center;color:var(--muted);padding:32px 16px;font-size:14px;}
 
-/* 모달 */
+/* 모달 (페이드) */
 .modal-bg{
-  position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;
+  position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;
   align-items:center;justify-content:center;z-index:50;padding:18px;
+  opacity:0;visibility:hidden;transition:opacity .2s ease, visibility .2s ease;
 }
-.modal-bg.show{display:flex;}
+.modal-bg.show{opacity:1;visibility:visible;}
 .modal{
   background:#fff;border-radius:14px;padding:22px 22px;max-width:480px;width:100%;
   box-shadow:0 24px 60px -20px rgba(0,0,0,.4);
+  transform:translateY(6px);transition:transform .22s ease;
 }
-.modal h3{margin:0 0 4px;font-size:18px;}
+.modal-bg.show .modal{transform:none;}
+.modal h3{margin:0 0 4px;font-size:18px;font-weight:700;}
 .modal p{font-size:13px;color:var(--muted);margin:0 0 14px;}
-.modal label{font-size:12px;color:var(--muted);display:block;margin:8px 0 4px;}
+.modal label{font-size:12px;color:var(--muted);display:block;margin:8px 0 4px;font-weight:500;}
 .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;}
 .modal .hint{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5;}
 .modal .hint code{background:var(--soft);padding:1px 5px;border-radius:4px;font-size:11.5px;}
@@ -213,7 +224,6 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;}
         <span class="k">PX 합계</span>             <span class="v" id="pxSum">0원</span>
         <span class="k">인터넷/할인마트 합계</span> <span class="v" id="webSum">0원</span>
         <span class="k">절약 금액</span>           <span class="v save" id="saveSum">0원</span>
-        <span class="k">담은 품목</span>           <span class="v" id="itemCnt">0개</span>
       </div>
     </div>
 
@@ -257,7 +267,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;}
         </div>
         <div>
           <label>카테고리 (선택)</label>
-          <select id="f-cat">
+          <select id="f-cat" onchange="onNewCategorySelect(this)">
             <option value="">선택 안 함</option>
           </select>
         </div>
@@ -265,7 +275,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;}
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);">
             <input id="f-force" type="checkbox" /> 가격차 40% 초과 경고 무시
           </label>
-          <button type="reset" class="btn ghost">초기화</button>
+          <button type="reset" class="btn ghost" onclick="resetAddForm()">입력초기화</button>
           <button type="submit" class="btn">DB에 등록</button>
         </div>
       </form>
@@ -280,11 +290,9 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;}
           <option value="">전체 카테고리</option>
         </select>
         <select id="adminSort" onchange="renderAdminTable()">
-          <option value="name_asc">정렬: 상품명 가나다순(ㄱ→ㅎ)</option>
-          <option value="name_desc">정렬: 상품명 내림차순(ㅎ→ㄱ)</option>
+          <option value="name_asc">정렬: 상품명순</option>
           <option value="px_desc">정렬: PX가 높은순</option>
-          <option value="web_desc">정렬: 인터넷/할인마트가 높은순</option>
-          <option value="save_desc">정렬: 절약률 높은순</option>
+          <option value="save_desc">정렬: 할인율 높은순</option>
         </select>
       </div>
       <div class="tbl-wrap">
@@ -365,6 +373,9 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // 등록 모드 비밀번호 (취미 용도로 단순 잠금)
 const ADMIN_PW = "1634";
 let adminUnlocked = false;
+
+// 새 카테고리 입력 임시 보관 (폼 reload 사이에 유지)
+let pendingNewCategory = "";
 
 const LS_CFG     = "px_cfg";
 const LS_CART    = "px_cart";
@@ -475,13 +486,21 @@ function fillCategoryFilter(){
     sel1.innerHTML = optAll;
     sel1.value = cur;
   }
-  // 2) 등록 모드 — 새 상품 등록 폼의 카테고리 (드롭다운)
+  // 2) 등록 모드 — 새 상품 등록 폼의 카테고리 (드롭다운 + 새 카테고리 옵션)
   const sel2 = document.getElementById("f-cat");
   if (sel2) {
     const cur = sel2.value;
     sel2.innerHTML = '<option value="">선택 안 함</option>'
-      + cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
-    sel2.value = cur;
+      + cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("")
+      + '<option value="__NEW__" style="color:#2563eb;font-weight:600;">+ 새 카테고리 추가…</option>';
+    // pendingNewCategory: 등록 직전 폼에 임시 추가해둔 신규 카테고리
+    if (pendingNewCategory && !cats.includes(pendingNewCategory)) {
+      const opt = document.createElement("option");
+      opt.value = pendingNewCategory; opt.textContent = pendingNewCategory + " (신규)";
+      opt.style.color = "#16a34a";
+      sel2.insertBefore(opt, sel2.querySelector('option[value="__NEW__"]'));
+    }
+    sel2.value = pendingNewCategory || cur;
   }
   // 3) 등록 모드 — 등록된 상품 리스트의 카테고리 필터
   const sel3 = document.getElementById("adminCatFilter");
@@ -506,6 +525,7 @@ function renderCatalog(){
 
   if (filtered.length === 0) {
     root.innerHTML = '<div class="empty-msg">조건에 맞는 상품이 없습니다.</div>';
+    fadeIn(root);
     return;
   }
   const SHOW = 60;
@@ -539,6 +559,7 @@ function renderCatalog(){
     </div>
     ${filtered.length > SHOW ? `<div style="font-size:12px;color:var(--muted);margin-top:8px;">… 외 ${filtered.length - SHOW}개. 검색어를 더 좁혀보세요.</div>` : ''}
   `;
+  fadeIn(root);
 }
 
 /* ===== 견적 모드 — 장바구니 ===== */
@@ -615,7 +636,6 @@ function updateSummary(pxSum, webSum, cnt){
   const box = document.getElementById("summaryBox");
   document.getElementById("pxSum").textContent  = fmt(pxSum)  + "원";
   document.getElementById("webSum").textContent = fmt(webSum) + "원";
-  document.getElementById("itemCnt").textContent = cnt + "개";
 
   if (pxSum === 0) {
     box.style.background = "rgb(148,163,184)";
@@ -648,9 +668,7 @@ function renderAdminTable(){
   // 정렬 (원본 가격 기준; 편집중인 dirty 값은 정렬에 반영하지 않음)
   const sorters = {
     name_asc:  (a, b) => a.name.localeCompare(b.name, "ko"),
-    name_desc: (a, b) => b.name.localeCompare(a.name, "ko"),
     px_desc:   (a, b) => (b.px_price       || 0) - (a.px_price       || 0),
-    web_desc:  (a, b) => (b.internet_price || 0) - (a.internet_price || 0),
     save_desc: (a, b) => {
       const ra = a.internet_price > 0 ? (a.internet_price - a.px_price) / a.internet_price : 0;
       const rb = b.internet_price > 0 ? (b.internet_price - b.px_price) / b.internet_price : 0;
@@ -668,6 +686,7 @@ function renderAdminTable(){
 
   if (list.length === 0) {
     tb.innerHTML = '<tr><td colspan="6" class="empty-msg">등록된 상품이 없습니다.</td></tr>';
+    fadeIn(tb);
     updateEditButtons();
     return;
   }
@@ -693,6 +712,7 @@ function renderAdminTable(){
         <td><button class="rm-btn" onclick="toggleDelete(${p.id})" title="${willDelete ? '삭제 취소' : '삭제'}">${willDelete ? '↺' : '✕'}</button></td>
       </tr>`;
   }).join("");
+  fadeIn(tb);
   updateEditButtons();
 }
 
@@ -775,6 +795,22 @@ async function saveEdits(){
 }
 
 /* ===== 등록 모드 — 새 상품 추가 ===== */
+function onNewCategorySelect(sel){
+  if (sel.value !== "__NEW__") return;
+  const v = (prompt("새 카테고리 이름을 입력하세요:") || "").trim();
+  if (!v) { sel.value = pendingNewCategory || ""; return; }
+  pendingNewCategory = v;
+  fillCategoryFilter(); // 새 옵션 끼워서 다시 그림
+  // (위 함수가 sel.value 를 pendingNewCategory 로 맞춰 줌)
+}
+
+function resetAddForm(){
+  pendingNewCategory = "";
+  document.getElementById("f-force").checked = false;
+  // form reset 자체는 button[type=reset] 이 처리함. 이후 카테고리 select 재구성:
+  setTimeout(fillCategoryFilter, 0);
+}
+
 async function addProduct(e){
   e.preventDefault();
   if (!sb) { toast("DB 연결이 필요합니다", true); openConfigModal(); return; }
@@ -798,6 +834,7 @@ async function addProduct(e){
     toast(`등록되었습니다: ${name}`);
     e.target.reset();
     document.getElementById("f-force").checked = false;
+    pendingNewCategory = "";
     await reloadProducts();
     reloadAll();
   } catch (err) {
@@ -805,6 +842,14 @@ async function addProduct(e){
     if (/duplicate|unique/i.test(msg)) toast("이미 같은 이름의 상품이 등록되어 있습니다", true);
     else toast("등록 실패: " + msg, true);
   }
+}
+
+/* ===== 페이드 헬퍼 ===== */
+function fadeIn(el){
+  if (!el) return;
+  el.classList.remove("fade-in");
+  void el.offsetWidth; // 강제 리플로우 → 같은 클래스 재적용 가능
+  el.classList.add("fade-in");
 }
 
 /* ===== 탭 전환 (등록 모드는 비밀번호 잠금) ===== */
@@ -816,10 +861,12 @@ function switchTab(name){
   _doSwitch(name);
 }
 function _doSwitch(name){
-  document.getElementById("view-quote").style.display = name === "quote" ? "" : "none";
-  document.getElementById("view-admin").style.display = name === "admin" ? "" : "none";
-  document.getElementById("tab-quote").classList.toggle("active", name === "quote");
-  document.getElementById("tab-admin").classList.toggle("active", name === "admin");
+  const showQuote = name === "quote";
+  document.getElementById("view-quote").style.display = showQuote ? "" : "none";
+  document.getElementById("view-admin").style.display = showQuote ? "none" : "";
+  document.getElementById("tab-quote").classList.toggle("active", showQuote);
+  document.getElementById("tab-admin").classList.toggle("active", !showQuote);
+  fadeIn(document.getElementById(showQuote ? "view-quote" : "view-admin"));
 }
 
 function openPasswordModal(){
