@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#0f172a" />
+<title>PX 견적기 — PX/군마트 vs 인터넷/할인마트 가격</title>
+
+<!-- Supabase JS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+:root{
+  --bg:#eef2f7; --panel:#ffffff; --ink:#0f172a; --muted:#475569;
+  --accent:#2563eb; --accent2:#0ea5e9; --line:#e2e8f0; --soft:#f8fafc;
+  --chip:#eff6ff; --save:#fde047;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+  font-family:"Segoe UI","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+  line-height:1.55;}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 18px 80px;}
+
+/* 표지 */
+header.cover{
+  background:linear-gradient(135deg,#0b1220 0%,#0f172a 50%,#1e3a8a 100%);
+  color:#fff;border-radius:16px;padding:24px 26px 22px;
+  box-shadow:0 18px 40px -20px rgba(15,23,42,.4);
+  position:relative;
+}
+header.cover .tag{display:inline-block;background:rgba(255,255,255,.12);color:#cbd5e1;
+  padding:4px 10px;border-radius:999px;font-size:11.5px;letter-spacing:.04em;}
+header.cover h1{font-size:24px;margin:12px 0 4px;letter-spacing:-.01em;}
+header.cover p.lead{margin:0;color:#cbd5e1;font-size:13.5px;}
+header.cover .cfg-btn{
+  position:absolute;top:18px;right:18px;background:rgba(255,255,255,.1);color:#fff;
+  border:1px solid rgba(255,255,255,.18);padding:6px 11px;border-radius:8px;
+  font-size:12px;cursor:pointer;
+}
+header.cover .cfg-btn:hover{background:rgba(255,255,255,.18);}
+
+/* 모드 탭 */
+nav.tabs{background:#fff;border:1px solid var(--line);border-radius:12px;padding:6px;
+  margin:14px 0 14px;display:flex;gap:4px;}
+nav.tabs button{
+  flex:1;background:transparent;border:0;color:var(--muted);
+  padding:10px 12px;font-size:14px;font-weight:600;border-radius:8px;cursor:pointer;
+}
+nav.tabs button.active{background:var(--accent);color:#fff;}
+nav.tabs button:not(.active):hover{background:var(--soft);color:var(--ink);}
+
+section{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  padding:18px 18px;margin:14px 0;box-shadow:0 4px 16px -10px rgba(15,23,42,.15);}
+section h2{font-size:16px;margin:0 0 4px;font-weight:700;
+  border-left:3px solid var(--accent);padding-left:10px;}
+section .sub{color:var(--muted);font-size:13px;margin:4px 0 12px;}
+
+/* 절약률 패널 */
+.summary{
+  border-radius:14px;padding:20px 22px;color:#fff;transition:background .25s;
+  display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;
+  background:rgb(148,163,184);box-shadow:0 8px 24px -14px rgba(15,23,42,.4);
+}
+.summary .label{font-size:11.5px;opacity:.85;text-transform:uppercase;letter-spacing:.05em;}
+.summary .pct{font-size:42px;font-weight:800;letter-spacing:-.02em;line-height:1;}
+.summary .nums{display:grid;grid-template-columns:auto auto;gap:4px 16px;font-size:13px;}
+.summary .nums .k{opacity:.85;}
+.summary .nums .v{font-weight:700;font-variant-numeric:tabular-nums;}
+.summary .nums .v.save{color:var(--save);font-weight:800;font-size:14px;}
+
+/* 입력/버튼 */
+input[type="text"],input[type="number"],select,textarea{
+  width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;
+  font-size:14px;background:#fff;color:var(--ink);font-family:inherit;
+}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(37,99,235,.15);}
+button.btn{
+  background:var(--accent);color:#fff;border:0;padding:10px 14px;font-size:13.5px;
+  font-weight:600;border-radius:8px;cursor:pointer;white-space:nowrap;
+}
+button.btn:hover{background:#1d4ed8;}
+button.btn:disabled{background:#cbd5e1;cursor:not-allowed;}
+button.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line);}
+button.btn.ghost:hover{background:var(--soft);}
+button.btn.danger{background:#dc2626;}
+button.btn.danger:hover{background:#b91c1c;}
+button.btn.warn{background:#fbbf24;color:#0f172a;}
+
+.toolbar{display:grid;grid-template-columns:1fr 180px;gap:8px;margin-bottom:10px;}
+
+/* 카탈로그 카드 */
+.catalog{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;}
+.pcard{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:#fff;
+  display:flex;flex-direction:column;gap:4px;}
+.pcard .pname{font-size:13.5px;font-weight:600;line-height:1.35;}
+.pcard .pmeta{font-size:11.5px;color:var(--muted);}
+.pcard .chip{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11px;
+  background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;margin-left:4px;}
+.pcard .prow{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:4px;}
+.pcard .ppx{font-size:14.5px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;}
+.pcard .pweb{font-size:11.5px;color:#94a3b8;text-decoration:line-through;margin-left:5px;
+  font-variant-numeric:tabular-nums;}
+.pcard .qbox{display:flex;gap:5px;align-items:center;}
+.pcard .qbox input{width:56px;padding:6px 4px;font-size:13px;text-align:center;}
+.pcard .qbox button{padding:6px 10px;font-size:12.5px;}
+.pcard.in-cart{border-color:var(--accent);background:#f0f7ff;}
+.pcard .in-cart-tag{font-size:11px;color:var(--accent);font-weight:600;margin-left:4px;}
+
+/* 표 */
+table{width:100%;border-collapse:collapse;font-size:13.5px;}
+th,td{border-bottom:1px solid var(--line);padding:9px 8px;text-align:left;vertical-align:middle;}
+th{background:var(--soft);color:var(--muted);font-size:12px;font-weight:600;}
+td.num{text-align:right;font-variant-numeric:tabular-nums;}
+.tbl-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px;}
+.qty-input{width:60px;padding:5px 4px;text-align:center;font-size:13px;}
+.cell-input{width:100%;padding:5px 6px;font-size:13px;border:1px solid transparent;background:transparent;}
+.cell-input:focus{border-color:var(--accent);background:#fff;}
+.cell-input.dirty{background:#fef9c3;}
+.rm-btn{background:transparent;border:0;color:#dc2626;cursor:pointer;font-size:14px;padding:4px 6px;}
+
+/* 폼 그리드 */
+.form-grid{display:grid;grid-template-columns:1fr 160px 160px 160px;gap:10px;align-items:end;}
+.form-grid label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px;}
+.form-grid .full{grid-column:1 / -1;}
+.gap-good{color:#047857;font-weight:600;}
+.gap-bad{color:#b91c1c;font-weight:600;}
+
+/* 콜아웃/배지 */
+.callout{
+  background:#fffbeb;border:1px solid #fed7aa;color:#78350f;
+  border-radius:10px;padding:12px 14px;font-size:13px;margin:8px 0;
+}
+.callout code{background:#fff;border:1px solid #fed7aa;padding:1px 6px;border-radius:4px;}
+.empty-msg{text-align:center;color:var(--muted);padding:32px 16px;font-size:14px;}
+
+/* 모달 */
+.modal-bg{
+  position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;
+  align-items:center;justify-content:center;z-index:50;padding:18px;
+}
+.modal-bg.show{display:flex;}
+.modal{
+  background:#fff;border-radius:14px;padding:22px 22px;max-width:480px;width:100%;
+  box-shadow:0 24px 60px -20px rgba(0,0,0,.4);
+}
+.modal h3{margin:0 0 4px;font-size:18px;}
+.modal p{font-size:13px;color:var(--muted);margin:0 0 14px;}
+.modal label{font-size:12px;color:var(--muted);display:block;margin:8px 0 4px;}
+.modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;}
+.modal .hint{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5;}
+.modal .hint code{background:var(--soft);padding:1px 5px;border-radius:4px;font-size:11.5px;}
+
+/* 토스트 */
+.toast{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(8px);
+  background:#0f172a;color:#fff;padding:11px 16px;border-radius:8px;font-size:13px;
+  box-shadow:0 8px 24px rgba(0,0,0,.2);opacity:0;transition:all .2s;pointer-events:none;z-index:99;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.error{background:#991b1b;}
+
+/* 모바일 */
+@media (max-width:720px){
+  header.cover{padding:20px 18px 18px;}
+  header.cover h1{font-size:20px;}
+  header.cover .cfg-btn{top:14px;right:14px;font-size:11px;padding:5px 9px;}
+  .summary{grid-template-columns:1fr;text-align:center;}
+  .summary .nums{justify-content:center;}
+  .toolbar{grid-template-columns:1fr;}
+  .form-grid{grid-template-columns:1fr 1fr;}
+  .form-grid .full{grid-column:1 / -1;}
+  .catalog{grid-template-columns:1fr;}
+  .pcard .qbox input{width:50px;}
+  section{padding:16px 14px;}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- 표지 -->
+  <header class="cover">
+    <button class="cfg-btn" onclick="openConfigModal()">⚙ DB 설정</button>
+    <span class="tag">PX/군마트 절약 견적기 · 개인 사용</span>
+    <h1>PX/군마트 vs 인터넷/할인마트 가격</h1>
+    <p class="lead">담은 상품의 PX 합계가 인터넷/할인마트 가격 대비 몇 % 더 저렴한지 실시간으로 알려줍니다.</p>
+  </header>
+
+  <!-- 모드 탭 -->
+  <nav class="tabs">
+    <button id="tab-quote" class="active" onclick="switchTab('quote')">💰 견적 모드</button>
+    <button id="tab-admin"            onclick="switchTab('admin')">🛠 상품 등록 모드</button>
+  </nav>
+
+  <!-- ===== 견적 모드 ===== -->
+  <div id="view-quote">
+
+    <div id="summaryBox" class="summary">
+      <div>
+        <div class="label">절약률 (인터넷/할인마트 가격 대비)</div>
+        <div class="pct" id="pctText">—</div>
+      </div>
+      <div class="nums">
+        <span class="k">PX 합계</span>             <span class="v" id="pxSum">0원</span>
+        <span class="k">인터넷/할인마트 합계</span> <span class="v" id="webSum">0원</span>
+        <span class="k">절약 금액</span>           <span class="v save" id="saveSum">0원</span>
+        <span class="k">담은 품목</span>           <span class="v" id="itemCnt">0개</span>
+      </div>
+    </div>
+
+    <section>
+      <h2>🛒 장바구니</h2>
+      <div id="cartArea">
+        <div class="empty-msg">아직 담긴 상품이 없습니다. 아래에서 검색해 담아보세요.</div>
+      </div>
+    </section>
+
+    <section>
+      <h2>📦 상품 추가</h2>
+      <div class="toolbar">
+        <input id="q" type="text" placeholder="🔍 상품명 검색 (예: 스팸, 신라면, 칫솔...)" oninput="renderCatalog()" />
+        <select id="catFilter" onchange="renderCatalog()">
+          <option value="">전체 카테고리</option>
+        </select>
+      </div>
+      <div id="catalog"></div>
+    </section>
+  </div>
+
+  <!-- ===== 등록 모드 ===== -->
+  <div id="view-admin" style="display:none">
+
+    <section>
+      <h2>＋ 새 상품 등록</h2>
+      <p class="sub">상품명에 용량까지 함께 적어주세요. 예) <code>스팸 마일드 (200g)</code></p>
+      <form id="addForm" onsubmit="addProduct(event)" class="form-grid">
+        <div class="full">
+          <label>상품명 (용량 포함)</label>
+          <input id="f-name" type="text" placeholder="예) 비비고 갈비탕 (400g)" required />
+        </div>
+        <div>
+          <label>PX 가격 (원)</label>
+          <input id="f-px" type="number" min="0" step="10" required />
+        </div>
+        <div>
+          <label>인터넷/할인마트 가격 (원)</label>
+          <input id="f-web" type="number" min="0" step="10" required />
+        </div>
+        <div>
+          <label>카테고리 (선택)</label>
+          <input id="f-cat" type="text" placeholder="식품/생활/화장품…" />
+        </div>
+        <div class="full" style="display:flex;gap:8px;justify-content:flex-end;align-items:center;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);">
+            <input id="f-force" type="checkbox" /> 가격차 40% 초과 경고 무시
+          </label>
+          <button type="reset" class="btn ghost">초기화</button>
+          <button type="submit" class="btn">DB에 등록</button>
+        </div>
+      </form>
+    </section>
+
+    <section>
+      <h2>📋 등록된 상품 (편집 / 삭제)</h2>
+      <p class="sub">표 안의 셀을 직접 클릭해 수정하거나, 우측 ✕로 삭제 표시 후 <b>변경사항 저장</b>을 눌러주세요. 변경된 셀은 노란색으로 강조됩니다.</p>
+      <div class="toolbar">
+        <input id="q2" type="text" placeholder="🔍 상품명 검색..." oninput="renderAdminTable()" />
+        <span></span>
+      </div>
+      <div class="tbl-wrap">
+        <table id="adminTable">
+          <thead>
+            <tr>
+              <th style="width:32%">상품명</th>
+              <th style="width:14%">카테고리</th>
+              <th class="num" style="width:14%">PX가</th>
+              <th class="num" style="width:14%">인터넷/할인마트가</th>
+              <th class="num" style="width:14%">절약률</th>
+              <th style="width:6%"></th>
+            </tr>
+          </thead>
+          <tbody id="adminTbody"></tbody>
+        </table>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;">
+        <button id="resetEditBtn" class="btn ghost" onclick="resetEdits()" disabled>↺ 변경 취소</button>
+        <button id="saveEditBtn"  class="btn"       onclick="saveEdits()"  disabled>💾 변경사항 저장</button>
+      </div>
+    </section>
+  </div>
+
+</div>
+
+<!-- DB 설정 모달 -->
+<div id="cfgModal" class="modal-bg">
+  <div class="modal">
+    <h3>🔐 DB(Supabase) 연결 설정</h3>
+    <p>이 브라우저(LocalStorage)에만 저장되며 서버나 GitHub에 올라가지 않습니다.</p>
+    <label>Supabase Project URL</label>
+    <input id="cfgUrl" type="text" placeholder="https://xxxx.supabase.co" />
+    <label>Supabase Publishable / anon Key</label>
+    <input id="cfgKey" type="text" placeholder="sb_publishable_... 또는 eyJhbGc..." />
+    <div class="hint">
+      Supabase 콘솔 → <code>Settings → API Keys</code> 에서 <code>Publishable key</code>를 복사해 주세요.
+      <code>secret</code> 키는 절대 사용하지 마세요.
+    </div>
+    <div class="actions">
+      <button class="btn ghost" onclick="closeConfigModal()">취소</button>
+      <button class="btn danger" onclick="clearConfig()">설정 삭제</button>
+      <button class="btn" onclick="saveConfig()">저장</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+/* ============================================================================
+ *  PX 견적기 — Vercel 정적 호스팅 + Supabase
+ *  - 키는 LocalStorage에만 저장 (코드/Git 노출 없음)
+ *  - PX < 인터넷/할인마트 가격 가정 (절약 금액은 항상 양수)
+ * ============================================================================ */
+
+const LS_CFG     = "px_cfg";
+const LS_CART    = "px_cart";
+const TABLE      = "px_products";
+
+let sb = null;            // Supabase client
+let products = [];        // [{id, name, px_price, internet_price, category}]
+let productsById = {};
+let cart = {};            // {id: qty}
+
+/* 편집 상태 (등록 모드) — id 별 dirty 셀 추적 */
+let edits = {};           // { id: {name?, category?, px_price?, internet_price?} }
+let deletes = new Set();  // pending delete ids
+
+/* ===== 초기화 ===== */
+(function init(){
+  try { cart = JSON.parse(localStorage.getItem(LS_CART) || "{}"); } catch { cart = {}; }
+  loadConfigAndConnect();
+})();
+
+function getConfig(){
+  try { return JSON.parse(localStorage.getItem(LS_CFG) || "null"); } catch { return null; }
+}
+function setConfig(url, key){
+  localStorage.setItem(LS_CFG, JSON.stringify({ url, key }));
+}
+function clearConfig(){
+  if(!confirm("저장된 DB 설정을 지울까요?")) return;
+  localStorage.removeItem(LS_CFG);
+  sb = null; products = []; productsById = {};
+  closeConfigModal();
+  toast("DB 설정을 지웠습니다");
+  reloadAll();
+  openConfigModal();
+}
+
+async function loadConfigAndConnect(){
+  const cfg = getConfig();
+  if (!cfg || !cfg.url || !cfg.key) {
+    openConfigModal();
+    reloadAll();
+    return;
+  }
+  try {
+    sb = supabase.createClient(cfg.url, cfg.key);
+    await reloadProducts();
+  } catch (e) {
+    toast("DB 연결 실패: " + e.message, true);
+    openConfigModal();
+  }
+  reloadAll();
+}
+
+/* ===== 모달 ===== */
+function openConfigModal(){
+  const cfg = getConfig() || {};
+  document.getElementById("cfgUrl").value = cfg.url || "";
+  document.getElementById("cfgKey").value = cfg.key || "";
+  document.getElementById("cfgModal").classList.add("show");
+}
+function closeConfigModal(){
+  document.getElementById("cfgModal").classList.remove("show");
+}
+async function saveConfig(){
+  let url = document.getElementById("cfgUrl").value.trim();
+  const key = document.getElementById("cfgKey").value.trim();
+  if (!url || !key) { toast("URL과 Key를 모두 입력하세요", true); return; }
+  // 안내성 정규화: 끝의 / 와 /rest/v1 제거
+  url = url.replace(/\/+$/, "").replace(/\/rest\/v1$/i, "");
+  setConfig(url, key);
+  closeConfigModal();
+  toast("저장 완료. 연결 시도합니다…");
+  await loadConfigAndConnect();
+}
+
+/* ===== 데이터 I/O ===== */
+async function reloadProducts(){
+  if (!sb) { products = []; productsById = {}; return; }
+  const { data, error } = await sb.from(TABLE)
+    .select("id,name,px_price,internet_price,category").order("name");
+  if (error) { toast("상품 로드 실패: " + error.message, true); products = []; }
+  else products = data || [];
+  productsById = Object.fromEntries(products.map(p => [p.id, p]));
+}
+
+async function reloadAll(){
+  fillCategoryFilter();
+  renderCatalog();
+  renderCart();
+  renderAdminTable();
+}
+
+/* ===== 견적 모드 — 카탈로그 ===== */
+function fillCategoryFilter(){
+  const sel = document.getElementById("catFilter");
+  const cats = [...new Set(products.map(p => p.category).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">전체 카테고리</option>'
+    + cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
+}
+
+function renderCatalog(){
+  const root = document.getElementById("catalog");
+  const q = document.getElementById("q").value.trim().toLowerCase();
+  const cat = document.getElementById("catFilter").value;
+
+  if (!q) {
+    root.innerHTML = '<div class="empty-msg">🔍 위 검색창에 상품명을 입력하면 결과가 표시됩니다.</div>';
+    return;
+  }
+  let filtered = products.filter(p => p.name.toLowerCase().includes(q));
+  if (cat) filtered = filtered.filter(p => p.category === cat);
+
+  if (filtered.length === 0) {
+    root.innerHTML = '<div class="empty-msg">조건에 맞는 상품이 없습니다.</div>';
+    return;
+  }
+  const SHOW = 60;
+  root.innerHTML = `
+    <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">${filtered.length}개 상품</div>
+    <div class="catalog">
+    ${filtered.slice(0, SHOW).map(p => {
+      const inCart = cart[p.id] || 0;
+      const save = Math.max((p.internet_price||0) - (p.px_price||0), 0);
+      const pct  = p.internet_price > 0 ? Math.round(save / p.internet_price * 100) : 0;
+      return `
+      <div class="pcard ${inCart ? 'in-cart' : ''}">
+        <div class="pname">${esc(p.name)}</div>
+        <div class="pmeta">
+          ${esc(p.category || '—')}
+          <span class="chip">🛒 ${pct}% 절약</span>
+          ${inCart ? `<span class="in-cart-tag">· 카트에 ${inCart}개</span>` : ''}
+        </div>
+        <div class="prow">
+          <div>
+            <span class="ppx">${fmt(p.px_price)}원</span>
+            <span class="pweb">시중 ${fmt(p.internet_price)}원</span>
+          </div>
+          <div class="qbox">
+            <input type="number" min="1" value="1" id="qty-${p.id}" />
+            <button class="btn" onclick="addToCart(${p.id})">＋</button>
+          </div>
+        </div>
+      </div>`;
+    }).join("")}
+    </div>
+    ${filtered.length > SHOW ? `<div style="font-size:12px;color:var(--muted);margin-top:8px;">… 외 ${filtered.length - SHOW}개. 검색어를 더 좁혀보세요.</div>` : ''}
+  `;
+}
+
+/* ===== 견적 모드 — 장바구니 ===== */
+function addToCart(id){
+  const v = parseInt(document.getElementById("qty-" + id).value, 10) || 1;
+  cart[id] = (cart[id] || 0) + Math.max(1, v);
+  saveCart();
+  renderCart();
+  renderCatalog();
+}
+function removeFromCart(id){
+  delete cart[id]; saveCart(); renderCart(); renderCatalog();
+}
+function setCartQty(id, v){
+  const q = parseInt(v, 10);
+  if (!q || q < 1) delete cart[id]; else cart[id] = q;
+  saveCart(); renderCart(); renderCatalog();
+}
+function clearCart(){
+  if (Object.keys(cart).length === 0) return;
+  if (!confirm("장바구니를 비우시겠어요?")) return;
+  cart = {}; saveCart(); renderCart(); renderCatalog();
+}
+function saveCart(){ localStorage.setItem(LS_CART, JSON.stringify(cart)); }
+
+function renderCart(){
+  const root = document.getElementById("cartArea");
+  const ids = Object.keys(cart);
+  if (ids.length === 0) {
+    root.innerHTML = '<div class="empty-msg">아직 담긴 상품이 없습니다. 아래에서 검색해 담아보세요.</div>';
+    updateSummary(0, 0, 0);
+    return;
+  }
+  let pxSum = 0, webSum = 0, cnt = 0;
+  const rows = ids.map(s => {
+    const id = +s;
+    const p = productsById[id];
+    if (!p) return "";
+    const q = cart[id];
+    const px = p.px_price * q, web = p.internet_price * q;
+    pxSum += px; webSum += web; cnt += q;
+    return `
+      <tr>
+        <td>${esc(p.name)}</td>
+        <td><input class="qty-input" type="number" min="1" value="${q}"
+            onchange="setCartQty(${id}, this.value)" /></td>
+        <td class="num">${fmt(p.px_price)}</td>
+        <td class="num">${fmt(p.internet_price)}</td>
+        <td class="num">${fmt(px)}</td>
+        <td class="num">${fmt(web)}</td>
+        <td><button class="rm-btn" onclick="removeFromCart(${id})" title="삭제">✕</button></td>
+      </tr>`;
+  }).join("");
+  root.innerHTML = `
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>상품명</th><th style="width:80px">수량</th>
+          <th class="num">PX가</th><th class="num">인터넷/할인마트가</th>
+          <th class="num">PX 소계</th><th class="num">인터넷/할인마트 소계</th>
+          <th></th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+      <button class="btn ghost" onclick="clearCart()">🗑 장바구니 비우기</button>
+    </div>`;
+  updateSummary(pxSum, webSum, cnt);
+}
+
+/* ===== 절약률 패널 (푸른색 0~30%+ 그라디언트, 절약 금액 노란 강조) ===== */
+function updateSummary(pxSum, webSum, cnt){
+  const box = document.getElementById("summaryBox");
+  document.getElementById("pxSum").textContent  = fmt(pxSum)  + "원";
+  document.getElementById("webSum").textContent = fmt(webSum) + "원";
+  document.getElementById("itemCnt").textContent = cnt + "개";
+
+  if (pxSum === 0) {
+    box.style.background = "rgb(148,163,184)";
+    document.getElementById("pctText").textContent = "—";
+    document.getElementById("saveSum").textContent = "0원";
+    return;
+  }
+  const save = Math.max(webSum - pxSum, 0);
+  const pct  = webSum > 0 ? (save / webSum * 100) : 0;
+  document.getElementById("saveSum").textContent = fmt(save) + "원";
+  document.getElementById("pctText").textContent = "▼ " + pct.toFixed(1) + "%";
+
+  const t = Math.min(pct / 30, 1);
+  const c1 = lerp([14,165,233], [29,78,216], t);
+  const c2 = darken(c1, 15);
+  box.style.background = `linear-gradient(135deg, ${rgb(c1)} 0%, ${rgb(c2)} 100%)`;
+}
+
+/* ===== 등록 모드 — 인라인 편집 ===== */
+function renderAdminTable(){
+  const tb = document.getElementById("adminTbody");
+  const q = (document.getElementById("q2")?.value || "").trim().toLowerCase();
+  const list = q ? products.filter(p => p.name.toLowerCase().includes(q)) : products;
+
+  if (list.length === 0) {
+    tb.innerHTML = '<tr><td colspan="6" class="empty-msg">등록된 상품이 없습니다.</td></tr>';
+    updateEditButtons();
+    return;
+  }
+  tb.innerHTML = list.map(p => {
+    const e = edits[p.id] || {};
+    const willDelete = deletes.has(p.id);
+    const merged = { ...p, ...e };
+    const save = Math.max(merged.internet_price - merged.px_price, 0);
+    const pct  = merged.internet_price > 0 ? (save / merged.internet_price * 100) : 0;
+    const cls  = willDelete ? "gap-bad" : "gap-good";
+    const rowStyle = willDelete ? "background:#fef2f2;text-decoration:line-through;color:#94a3b8;" : "";
+    return `
+      <tr style="${rowStyle}">
+        <td><input class="cell-input ${'name' in e ? 'dirty' : ''}" type="text"
+              value="${esc(merged.name)}" oninput="onCellEdit(${p.id},'name',this.value)" /></td>
+        <td><input class="cell-input ${'category' in e ? 'dirty' : ''}" type="text"
+              value="${esc(merged.category || '')}" oninput="onCellEdit(${p.id},'category',this.value)" /></td>
+        <td class="num"><input class="cell-input ${'px_price' in e ? 'dirty' : ''}" type="number" min="0" step="10"
+              value="${merged.px_price}" oninput="onCellEdit(${p.id},'px_price',this.value)" style="text-align:right" /></td>
+        <td class="num"><input class="cell-input ${'internet_price' in e ? 'dirty' : ''}" type="number" min="0" step="10"
+              value="${merged.internet_price}" oninput="onCellEdit(${p.id},'internet_price',this.value)" style="text-align:right" /></td>
+        <td class="num ${cls}">${pct.toFixed(1)}%</td>
+        <td><button class="rm-btn" onclick="toggleDelete(${p.id})" title="${willDelete ? '삭제 취소' : '삭제'}">${willDelete ? '↺' : '✕'}</button></td>
+      </tr>`;
+  }).join("");
+  updateEditButtons();
+}
+
+function onCellEdit(id, field, value){
+  const orig = productsById[id];
+  if (!orig) return;
+  const e = edits[id] || {};
+  let v = (field === "px_price" || field === "internet_price") ? parseInt(value, 10) || 0 : value;
+  if (field === "category") v = (v || "").trim();
+  if (field === "name")     v = (v || "").trim();
+  // 원본과 같으면 dirty 해제
+  const origVal = (field === "category") ? (orig.category || "") : orig[field];
+  if (v === origVal) { delete e[field]; }
+  else               { e[field] = v; }
+  if (Object.keys(e).length === 0) delete edits[id]; else edits[id] = e;
+  updateEditButtons();
+}
+
+function toggleDelete(id){
+  if (deletes.has(id)) deletes.delete(id); else deletes.add(id);
+  renderAdminTable();
+}
+
+function resetEdits(){
+  if (Object.keys(edits).length === 0 && deletes.size === 0) return;
+  if (!confirm("모든 변경사항을 취소하시겠어요?")) return;
+  edits = {}; deletes = new Set();
+  renderAdminTable();
+}
+
+function updateEditButtons(){
+  const dirty = Object.keys(edits).length + deletes.size;
+  document.getElementById("saveEditBtn").disabled  = dirty === 0;
+  document.getElementById("resetEditBtn").disabled = dirty === 0;
+  document.getElementById("saveEditBtn").textContent =
+    dirty === 0 ? "💾 변경사항 저장" : `💾 변경사항 저장 (${dirty}건)`;
+}
+
+async function saveEdits(){
+  if (!sb) { toast("DB 연결이 필요합니다", true); openConfigModal(); return; }
+
+  // 가격차 40% 검증 (편집 후 값 기준)
+  const warn = [];
+  for (const id of Object.keys(edits)) {
+    const merged = { ...productsById[id], ...edits[id] };
+    const px = +merged.px_price, web = +merged.internet_price;
+    if (px > 0 && Math.abs(web - px) / px > 0.4) warn.push(`${merged.name} (${Math.round(Math.abs(web-px)/px*100)}%)`);
+  }
+  if (warn.length > 0) {
+    if (!confirm("아래 항목은 PX와 인터넷/할인마트 가격차가 40%를 초과합니다. 다른 제품일 가능성이 큽니다. 그래도 저장할까요?\n\n- " + warn.join("\n- "))) return;
+  }
+
+  let ok = 0, err = 0, lastErr = "";
+  // UPDATE
+  for (const id of Object.keys(edits)) {
+    if (deletes.has(+id)) continue;
+    const payload = { ...edits[id] };
+    if ("category" in payload && payload.category === "") payload.category = null;
+    try {
+      const { error } = await sb.from(TABLE).update(payload).eq("id", id);
+      if (error) throw error;
+      ok++;
+    } catch (e) { err++; lastErr = e.message || String(e); }
+  }
+  // DELETE
+  for (const id of deletes) {
+    try {
+      const { error } = await sb.from(TABLE).delete().eq("id", id);
+      if (error) throw error;
+      delete cart[id];
+      ok++;
+    } catch (e) { err++; lastErr = e.message || String(e); }
+  }
+  saveCart();
+  edits = {}; deletes = new Set();
+  await reloadProducts();
+  reloadAll();
+  if (err === 0) toast(`저장 완료: ${ok}건 반영`);
+  else toast(`${ok}건 반영 / ${err}건 실패: ${lastErr}`, true);
+}
+
+/* ===== 등록 모드 — 새 상품 추가 ===== */
+async function addProduct(e){
+  e.preventDefault();
+  if (!sb) { toast("DB 연결이 필요합니다", true); openConfigModal(); return; }
+  const name = document.getElementById("f-name").value.trim();
+  const px   = parseInt(document.getElementById("f-px").value, 10);
+  const web  = parseInt(document.getElementById("f-web").value, 10);
+  const cat  = document.getElementById("f-cat").value.trim() || null;
+  const force= document.getElementById("f-force").checked;
+  if (!name || !px || !web) { toast("입력값을 확인해 주세요", true); return; }
+
+  const gap = Math.abs(web - px) / px;
+  if (gap > 0.4 && !force) {
+    toast(`PX와 인터넷/할인마트 가격 차이가 ${Math.round(gap*100)}%로 40% 초과 — 다른 제품일 가능성이 큽니다. 같은 제품이라면 ‘경고 무시’ 체크 후 다시 시도하세요.`, true);
+    return;
+  }
+  try {
+    const { error } = await sb.from(TABLE).insert({
+      name, px_price: px, internet_price: web, category: cat
+    });
+    if (error) throw error;
+    toast(`등록되었습니다: ${name}`);
+    e.target.reset();
+    document.getElementById("f-force").checked = false;
+    await reloadProducts();
+    reloadAll();
+  } catch (err) {
+    const msg = err.message || String(err);
+    if (/duplicate|unique/i.test(msg)) toast("이미 같은 이름의 상품이 등록되어 있습니다", true);
+    else toast("등록 실패: " + msg, true);
+  }
+}
+
+/* ===== 탭 전환 ===== */
+function switchTab(name){
+  document.getElementById("view-quote").style.display = name === "quote" ? "" : "none";
+  document.getElementById("view-admin").style.display = name === "admin" ? "" : "none";
+  document.getElementById("tab-quote").classList.toggle("active", name === "quote");
+  document.getElementById("tab-admin").classList.toggle("active", name === "admin");
+}
+
+/* ===== 유틸 ===== */
+function fmt(n){ return Number(n||0).toLocaleString("ko-KR"); }
+function esc(s){ return String(s ?? "").replace(/[&<>"']/g, c => ({
+  "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+}[c])); }
+function lerp(a, b, t){ return a.map((v,i)=>Math.round(v + (b[i]-v)*t)); }
+function rgb(c){ return `rgb(${c[0]},${c[1]},${c[2]})`; }
+function darken(c, pct){ return c.map(v => Math.max(0, Math.round(v*(1-pct/100)))); }
+function toast(msg, isError){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.toggle("error", !!isError); t.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove("show"), 2600);
+}
+</script>
+
+</body>
+</html>
