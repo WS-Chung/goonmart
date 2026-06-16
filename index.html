@@ -88,6 +88,12 @@ button.btn.danger:hover{background:#b91c1c;}
 button.btn.warn{background:#fbbf24;color:#0f172a;}
 
 .toolbar{display:grid;grid-template-columns:1fr 180px;gap:8px;margin-bottom:10px;}
+.toolbar.admin-toolbar{grid-template-columns:1fr 160px 200px;}
+
+/* number input 스피너 제거 (가격은 직접 입력) */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button{ -webkit-appearance:none; margin:0; }
+input[type="number"]{ -moz-appearance:textfield; appearance:textfield; }
 
 /* 카탈로그 카드 */
 .catalog{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;}
@@ -168,6 +174,7 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;}
   .summary{grid-template-columns:1fr;text-align:center;}
   .summary .nums{justify-content:center;}
   .toolbar{grid-template-columns:1fr;}
+  .toolbar.admin-toolbar{grid-template-columns:1fr;}
   .form-grid{grid-template-columns:1fr 1fr;}
   .form-grid .full{grid-column:1 / -1;}
   .catalog{grid-template-columns:1fr;}
@@ -250,7 +257,9 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;}
         </div>
         <div>
           <label>카테고리 (선택)</label>
-          <input id="f-cat" type="text" placeholder="식품/생활/화장품…" />
+          <select id="f-cat">
+            <option value="">선택 안 함</option>
+          </select>
         </div>
         <div class="full" style="display:flex;gap:8px;justify-content:flex-end;align-items:center;">
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);">
@@ -265,9 +274,18 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;}
     <section>
       <h2>📋 등록된 상품 (편집 / 삭제)</h2>
       <p class="sub">표 안의 셀을 직접 클릭해 수정하거나, 우측 ✕로 삭제 표시 후 <b>변경사항 저장</b>을 눌러주세요. 변경된 셀은 노란색으로 강조됩니다.</p>
-      <div class="toolbar">
+      <div class="toolbar admin-toolbar">
         <input id="q2" type="text" placeholder="🔍 상품명 검색..." oninput="renderAdminTable()" />
-        <span></span>
+        <select id="adminCatFilter" onchange="renderAdminTable()">
+          <option value="">전체 카테고리</option>
+        </select>
+        <select id="adminSort" onchange="renderAdminTable()">
+          <option value="name_asc">정렬: 상품명 가나다순(ㄱ→ㅎ)</option>
+          <option value="name_desc">정렬: 상품명 내림차순(ㅎ→ㄱ)</option>
+          <option value="px_desc">정렬: PX가 높은순</option>
+          <option value="web_desc">정렬: 인터넷/할인마트가 높은순</option>
+          <option value="save_desc">정렬: 절약률 높은순</option>
+        </select>
       </div>
       <div class="tbl-wrap">
         <table id="adminTable">
@@ -314,6 +332,22 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;}
   </div>
 </div>
 
+<!-- 등록 모드 비밀번호 모달 -->
+<div id="pwModal" class="modal-bg">
+  <div class="modal">
+    <h3>🔒 등록 모드 잠금</h3>
+    <p>상품 등록 모드에 들어가려면 비밀번호를 입력해 주세요.</p>
+    <label>비밀번호</label>
+    <input id="pwInput" type="password" inputmode="numeric" autocomplete="off"
+           onkeydown="if(event.key==='Enter')checkPassword()" />
+    <div id="pwError" style="color:#dc2626;font-size:13px;margin-top:6px;display:none">비밀번호가 틀립니다.</div>
+    <div class="actions">
+      <button class="btn ghost" onclick="cancelPassword()">취소</button>
+      <button class="btn" onclick="checkPassword()">확인</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <script>
@@ -327,6 +361,10 @@ td.num{text-align:right;font-variant-numeric:tabular-nums;}
 // 기본 Supabase 연결값 (LocalStorage override 가 있으면 그쪽이 우선)
 const SUPABASE_URL = "https://rdscrqmqepxjuayodwqc.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJkc2NycW1xZXB4anVheW9kd3FjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MDIwNjgsImV4cCI6MjA5NTk3ODA2OH0._5hTtsAi0jpEG8ommpdGM_XXIKP78tvBXR3YjyMXVCI";
+
+// 등록 모드 비밀번호 (취미 용도로 단순 잠금)
+const ADMIN_PW = "1634";
+let adminUnlocked = false;
 
 const LS_CFG     = "px_cfg";
 const LS_CART    = "px_cart";
@@ -425,10 +463,33 @@ async function reloadAll(){
 
 /* ===== 견적 모드 — 카탈로그 ===== */
 function fillCategoryFilter(){
-  const sel = document.getElementById("catFilter");
-  const cats = [...new Set(products.map(p => p.category).filter(Boolean))].sort();
-  sel.innerHTML = '<option value="">전체 카테고리</option>'
+  const cats = [...new Set(products.map(p => p.category).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, "ko"));
+  const optAll = '<option value="">전체 카테고리</option>'
     + cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
+
+  // 1) 견적 모드 카탈로그 카테고리 필터
+  const sel1 = document.getElementById("catFilter");
+  if (sel1) {
+    const cur = sel1.value;
+    sel1.innerHTML = optAll;
+    sel1.value = cur;
+  }
+  // 2) 등록 모드 — 새 상품 등록 폼의 카테고리 (드롭다운)
+  const sel2 = document.getElementById("f-cat");
+  if (sel2) {
+    const cur = sel2.value;
+    sel2.innerHTML = '<option value="">선택 안 함</option>'
+      + cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
+    sel2.value = cur;
+  }
+  // 3) 등록 모드 — 등록된 상품 리스트의 카테고리 필터
+  const sel3 = document.getElementById("adminCatFilter");
+  if (sel3) {
+    const cur = sel3.value;
+    sel3.innerHTML = optAll;
+    sel3.value = cur;
+  }
 }
 
 function renderCatalog(){
@@ -576,8 +637,34 @@ function updateSummary(pxSum, webSum, cnt){
 /* ===== 등록 모드 — 인라인 편집 ===== */
 function renderAdminTable(){
   const tb = document.getElementById("adminTbody");
-  const q = (document.getElementById("q2")?.value || "").trim().toLowerCase();
-  const list = q ? products.filter(p => p.name.toLowerCase().includes(q)) : products;
+  const q   = (document.getElementById("q2")?.value || "").trim().toLowerCase();
+  const cat = document.getElementById("adminCatFilter")?.value || "";
+  const srt = document.getElementById("adminSort")?.value || "name_asc";
+
+  let list = products;
+  if (q)   list = list.filter(p => p.name.toLowerCase().includes(q));
+  if (cat) list = list.filter(p => (p.category || "") === cat);
+
+  // 정렬 (원본 가격 기준; 편집중인 dirty 값은 정렬에 반영하지 않음)
+  const sorters = {
+    name_asc:  (a, b) => a.name.localeCompare(b.name, "ko"),
+    name_desc: (a, b) => b.name.localeCompare(a.name, "ko"),
+    px_desc:   (a, b) => (b.px_price       || 0) - (a.px_price       || 0),
+    web_desc:  (a, b) => (b.internet_price || 0) - (a.internet_price || 0),
+    save_desc: (a, b) => {
+      const ra = a.internet_price > 0 ? (a.internet_price - a.px_price) / a.internet_price : 0;
+      const rb = b.internet_price > 0 ? (b.internet_price - b.px_price) / b.internet_price : 0;
+      return rb - ra;
+    },
+  };
+  list = [...list].sort(sorters[srt] || sorters.name_asc);
+
+  // 표 안 카테고리 드롭다운에 쓸 옵션 목록 (등록된 카테고리들, 가나다순)
+  const cats = [...new Set(products.map(p => p.category).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, "ko"));
+  const catOptionsHTML = (current) =>
+    '<option value="">—</option>'
+    + cats.map(c => `<option value="${esc(c)}"${c === (current || "") ? " selected" : ""}>${esc(c)}</option>`).join("");
 
   if (list.length === 0) {
     tb.innerHTML = '<tr><td colspan="6" class="empty-msg">등록된 상품이 없습니다.</td></tr>';
@@ -596,8 +683,8 @@ function renderAdminTable(){
       <tr style="${rowStyle}">
         <td><input class="cell-input ${'name' in e ? 'dirty' : ''}" type="text"
               value="${esc(merged.name)}" oninput="onCellEdit(${p.id},'name',this.value)" /></td>
-        <td><input class="cell-input ${'category' in e ? 'dirty' : ''}" type="text"
-              value="${esc(merged.category || '')}" oninput="onCellEdit(${p.id},'category',this.value)" /></td>
+        <td><select class="cell-input ${'category' in e ? 'dirty' : ''}"
+              onchange="onCellEdit(${p.id},'category',this.value)">${catOptionsHTML(merged.category)}</select></td>
         <td class="num"><input class="cell-input ${'px_price' in e ? 'dirty' : ''}" type="number" min="0" step="10"
               value="${merged.px_price}" oninput="onCellEdit(${p.id},'px_price',this.value)" style="text-align:right" /></td>
         <td class="num"><input class="cell-input ${'internet_price' in e ? 'dirty' : ''}" type="number" min="0" step="10"
@@ -720,12 +807,44 @@ async function addProduct(e){
   }
 }
 
-/* ===== 탭 전환 ===== */
+/* ===== 탭 전환 (등록 모드는 비밀번호 잠금) ===== */
 function switchTab(name){
+  if (name === "admin" && !adminUnlocked) {
+    openPasswordModal();
+    return;
+  }
+  _doSwitch(name);
+}
+function _doSwitch(name){
   document.getElementById("view-quote").style.display = name === "quote" ? "" : "none";
   document.getElementById("view-admin").style.display = name === "admin" ? "" : "none";
   document.getElementById("tab-quote").classList.toggle("active", name === "quote");
   document.getElementById("tab-admin").classList.toggle("active", name === "admin");
+}
+
+function openPasswordModal(){
+  document.getElementById("pwInput").value = "";
+  document.getElementById("pwError").style.display = "none";
+  document.getElementById("pwModal").classList.add("show");
+  setTimeout(() => document.getElementById("pwInput").focus(), 50);
+}
+function closePasswordModal(){
+  document.getElementById("pwModal").classList.remove("show");
+}
+function cancelPassword(){
+  closePasswordModal(); // 탭은 견적 모드 유지
+}
+function checkPassword(){
+  const v = document.getElementById("pwInput").value;
+  if (v === ADMIN_PW) {
+    adminUnlocked = true;
+    closePasswordModal();
+    _doSwitch("admin");
+  } else {
+    document.getElementById("pwError").style.display = "block";
+    const i = document.getElementById("pwInput");
+    i.value = ""; i.focus();
+  }
 }
 
 /* ===== 유틸 ===== */
