@@ -577,7 +577,7 @@ function fillCategoryFilter(){
   }
 }
 
-function renderCatalog(){
+function renderCatalog(animated = true){
   const root = document.getElementById("catalog");
   const q = document.getElementById("q").value.trim().toLowerCase();
   const cat = document.getElementById("catFilter").value;
@@ -591,7 +591,7 @@ function renderCatalog(){
 
   if (filtered.length === 0) {
     root.innerHTML = '<div class="empty-msg">조건에 맞는 상품이 없습니다.</div>';
-    fadeIn(root);
+    if (animated) fadeIn(root);
     return;
   }
   const SHOW = 60;
@@ -622,7 +622,7 @@ function renderCatalog(){
     </div>
     ${filtered.length > SHOW ? `<div style="font-size:12px;color:var(--muted);margin-top:8px;">… 외 ${filtered.length - SHOW}개. 검색어를 더 좁혀보세요.</div>` : ''}
   `;
-  fadeIn(root);
+  if (animated) fadeIn(root);
 }
 
 /* ===== 견적 모드 — 장바구니 ===== */
@@ -630,27 +630,27 @@ function addToCart(id){
   cart[id] = (cart[id] || 0) + 1;
   saveCart();
   renderCart();
-  renderCatalog();
+  renderCatalog(false);
 }
 function adjustQty(id, delta){
   const cur = cart[id] || 1;
   cart[id] = Math.max(1, cur + delta);
   saveCart();
   renderCart();
-  renderCatalog();
+  renderCatalog(false);
 }
 function removeFromCart(id){
-  delete cart[id]; saveCart(); renderCart(); renderCatalog();
+  delete cart[id]; saveCart(); renderCart(); renderCatalog(false);
 }
 function setCartQty(id, v){
   const q = parseInt(v, 10);
   if (!q || q < 1) delete cart[id]; else cart[id] = q;
-  saveCart(); renderCart(); renderCatalog();
+  saveCart(); renderCart(); renderCatalog(false);
 }
 function clearCart(){
   if (Object.keys(cart).length === 0) return;
   if (!confirm("장바구니를 비우시겠어요?")) return;
-  cart = {}; saveCart(); renderCart(); renderCatalog();
+  cart = {}; saveCart(); renderCart(); renderCatalog(false);
 }
 function saveCart(){ localStorage.setItem(LS_CART, JSON.stringify(cart)); }
 
