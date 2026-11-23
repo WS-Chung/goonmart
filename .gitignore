@@ -3,6 +3,10 @@
 Thumbs.db
 desktop.ini
 
+# 사내 디자인 규칙 DA UI hallmark: 로컬 참조용이라 저장소에 올리지 않음
+# (저장소에 포함하기로 정하면 이 줄만 지운다)
+DA_UI_hallmark/
+
 # Editor / IDE (개인 설정은 커밋하지 않음)
 .vscode/
 .idea/
