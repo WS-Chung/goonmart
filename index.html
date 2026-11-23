@@ -388,7 +388,7 @@ tbody tr:last-child td{border-bottom:0;}
           </select>
         </div>
         <div class="full" style="display:flex;gap:8px;justify-content:flex-end;align-items:center;">
-          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-48);">
             <input id="f-force" type="checkbox" /> 가격차 40% 초과 경고 무시
           </label>
           <button type="reset" class="btn ghost" onclick="resetAddForm()">입력초기화</button>
@@ -646,7 +646,7 @@ function renderCatalog(animated = true){
   }
   const SHOW = 60;
   root.innerHTML = `
-    <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">${filtered.length}개 상품</div>
+    <div style="font-size:12px;color:var(--ink-48);margin-bottom:6px;">${filtered.length}개 상품</div>
     <div class="catalog">
     ${filtered.slice(0, SHOW).map(p => {
       const inCart = cart[p.id] || 0;
@@ -670,7 +670,7 @@ function renderCatalog(animated = true){
       </div>`;
     }).join("")}
     </div>
-    ${filtered.length > SHOW ? `<div style="font-size:12px;color:var(--muted);margin-top:8px;">… 외 ${filtered.length - SHOW}개. 검색어를 더 좁혀보세요.</div>` : ''}
+    ${filtered.length > SHOW ? `<div style="font-size:12px;color:var(--ink-48);margin-top:8px;">… 외 ${filtered.length - SHOW}개. 검색어를 더 좁혀보세요.</div>` : ''}
   `;
   if (animated) fadeIn(root);
 }
