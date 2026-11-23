@@ -1,0 +1,5 @@
+# git blame 에서 제외할 대규모 서식 변경 커밋 (GitHub는 자동 인식)
+# 로컬에서 쓰려면: git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# chore: 줄바꿈을 LF로 정규화 (.gitattributes 추가)
+09f1ddf9cac7058132593ccff82f2839f51ef73e

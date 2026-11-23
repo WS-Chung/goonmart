@@ -3,15 +3,22 @@
 PX/군마트에서 장 볼 때 인터넷/할인마트 가격 대비 얼마나 절약되는지
 실시간으로 보여주는 단일 페이지 앱.
 
+- 저장소: https://github.com/WS-Chung/goonmart
+- 개발 가이드(구조·상태·규칙·알려진 이슈): [CLAUDE.md](CLAUDE.md)
+
 ```
-shopping/
-├ index.html          ← Vercel에 그대로 올라가는 본체 (HTML+CSS+JS 한 장)
-├ supabase_init.sql   ← Supabase 스키마/정책 셋업 (최초 1회)
-├ px_products.csv     ← 초기 시드 데이터 (188행 가량)
-└ README.md
+goonmart/
+├ index.html              ← Vercel에 그대로 올라가는 본체 (HTML+CSS+JS 한 장)
+├ supabase_init.sql       ← Supabase 스키마/정책 셋업 (최초 1회)
+├ px_products.csv         ← 초기 시드 / 백업 데이터
+├ DESIGN-apple.md         ← CSS가 따르는 디자인 레퍼런스
+├ CLAUDE.md               ← 개발 가이드
+├ README.md
+├ .gitignore / .gitattributes / .git-blame-ignore-revs
+└ .vercelignore           ← 문서·SQL·CSV를 배포물에서 제외
 ```
 
-GitHub에 이 네 파일만 올리면 됩니다. 빌드 단계 없음, 의존성 없음.
+빌드 단계 없음, 의존성 없음. 배포되는 건 사실상 `index.html` 한 장입니다.
 
 ---
 
@@ -68,22 +75,28 @@ SELECT * FROM public.px_products ORDER BY id;
 
 ## 2. Vercel 배포
 
-### A. GitHub 레포에 올리기
+### A. 소스 받기 / 수정 흐름
 
-```bat
-cd C:\Users\Drimaes\Downloads\shopping
-git init
-git add .
-git commit -m "init: PX price tracker"
-git branch -M main
-git remote add origin https://github.com/<your-id>/<repo-name>.git
-git push -u origin main
+```bash
+git clone https://github.com/WS-Chung/goonmart.git
+cd goonmart
+python -m http.server 8000      # 로컬 확인: http://localhost:8000 (운영 DB에 연결됨)
 ```
 
-### B. Vercel에서 Import
+평소 작업 순서:
+
+```bash
+git pull                         # 다른 PC/사람의 변경 먼저 받기
+# index.html 수정 후 로컬 확인
+git add -A
+git commit -m "fix: 무엇을 왜 고쳤는지"
+git push                         # main 푸시 → Vercel 자동 배포
+```
+
+### B. Vercel에서 Import (최초 1회)
 
 1. https://vercel.com → New Project → Import Git Repository
-2. 위에서 만든 레포 선택
+2. `WS-Chung/goonmart` 레포 선택
 3. Framework Preset: **Other** (자동 감지될 수도 있음)
 4. Build/Output 설정 모두 비워두고 **Deploy** — 정적 파일이라 빌드 단계 없음
 
@@ -96,9 +109,12 @@ git push -u origin main
 배포 URL에 접속하면 코드에 하드코딩된 Supabase 연결을 자동으로 사용해 즉시 동작합니다.
 입력 모달이 뜨지 않습니다.
 
-다른 Supabase 프로젝트(예: 테스트용 별도 프로젝트)를 임시로 가리키고 싶을 때만
-우상단 **⚙ DB 설정** 버튼으로 URL/키를 덮어 쓸 수 있습니다. 모달 안의 **설정 삭제**를 누르면
-다시 코드 기본값으로 돌아갑니다.
+다른 Supabase 프로젝트(예: 테스트용 별도 프로젝트)를 임시로 가리키고 싶을 때는
+브라우저 개발자 도구 콘솔에서 `openConfigModal()`을 실행해 URL/키를 덮어 쓸 수 있습니다
+(이 브라우저에만 저장). 모달 안의 **설정 삭제**를 누르면 다시 코드 기본값으로 돌아갑니다.
+
+> 예전에 있던 우상단 **⚙ DB 설정** 버튼은 디자인 정리 과정에서 제거됐습니다.
+> 지금은 DB 연결에 실패할 때만 이 모달이 자동으로 뜹니다.
 
 > 키를 바꾸려면 `index.html` 상단의 `SUPABASE_URL` / `SUPABASE_ANON_KEY` 두 상수를 수정하고 재배포하세요.
 

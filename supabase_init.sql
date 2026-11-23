@@ -12,7 +12,7 @@
 --   2) Table Editor → px_products → Insert → Import data from CSV
 --      → 같은 폴더의 px_products.csv 업로드
 --   3) Settings → API Keys 에서 Project URL / Publishable key 복사 후
---      웹앱 우상단 ⚙ DB 설정 모달에 입력
+--      index.html 상단 SUPABASE_URL / SUPABASE_ANON_KEY 상수에 넣고 재배포
 -- =============================================================================
 
 -- 1) 테이블 생성 ------------------------------------------------------------
