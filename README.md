@@ -11,16 +11,13 @@ goonmart/
 ├ index.html              ← Vercel에 그대로 올라가는 본체 (HTML+CSS+JS 한 장)
 ├ supabase_init.sql       ← Supabase 스키마/정책 셋업 (최초 1회)
 ├ px_products.csv         ← 초기 시드 / 백업 데이터
-├ CLAUDE.md               ← 개발 가이드 (디자인 규칙 요약 포함)
+├ CLAUDE.md               ← 개발 가이드
 ├ README.md
 ├ .gitignore / .gitattributes / .git-blame-ignore-revs
 └ .vercelignore           ← 문서·SQL·CSV를 배포물에서 제외
 ```
 
 빌드 단계 없음, 의존성 없음. 배포되는 건 사실상 `index.html` 한 장입니다.
-
-> 디자인은 사내 규칙 **DA UI hallmark v1.0**을 따릅니다. 규칙 폴더 `DA_UI_hallmark/`는
-> 사내 자료라서 로컬에만 두고 저장소에는 올리지 않습니다(`.gitignore` 제외). 요약은 [CLAUDE.md](CLAUDE.md)에 있습니다.
 
 ---
 

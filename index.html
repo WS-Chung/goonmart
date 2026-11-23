@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko" data-hm-profile="app">
+<html lang="ko">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,11 +11,11 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 /* =====================================================================
-   DA UI hallmark v1.0 · app 프로필 (DA_UI_hallmark/10_template_app.html 기반)
-   - :root 기준값은 바꾸지 않는다. 색은 회사 8색과 무채색만 쓴다.
-   - 강조색은 네이비 하나. 절약 금액은 네이비 면 + 흰 글자(강조 면), PX 합계는 네이비 글자.
-   - 표는 엑셀형(data-sheet): 맑은 고딕 13px, 24px 행, 격자선, 행 번호.
-   - 화면 = <section class="view" data-hm-view="이름">. 주소 #이름 또는 window.hmShow("이름").
+   스타일 구성
+   - 색·모서리·그림자는 :root 변수만 쓴다. 색은 회사 8색과 무채색, 강조색은 네이비 하나.
+   - 절약 금액은 네이비 면 + 흰 글자, PX 합계는 네이비 글자.
+   - 표는 엑셀형(.xg 상자 + table.sh): 맑은 고딕 13px, 24px 행, 격자선, 행 번호.
+   - 화면 = <section class="view" data-view="이름">. 주소 #이름 또는 window.showView("이름").
    ===================================================================== */
 :root{
   color-scheme: light;
@@ -29,12 +29,12 @@
   --ink:#111111; --ink-2:#555555; --ink-3:#6B6F76;
   --float:0 10px 28px rgba(0,0,0,.08);
   --font:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,"Segoe UI","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
-  --sheet-font:"HM Sheet","Malgun Gothic","맑은 고딕","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  --sheet-font:"PX Sheet","Malgun Gothic","맑은 고딕","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
   --r-tag:4px; --r-ctl:6px; --r-panel:8px; --r-sheet:16px;
 }
 /* 엑셀형 표 글꼴: 설치된 맑은 고딕을 이름 하나로 묶는다 */
-@font-face{font-family:"HM Sheet";src:local("Malgun Gothic"),local("MalgunGothic"),local("맑은 고딕");font-weight:400}
-@font-face{font-family:"HM Sheet";src:local("Malgun Gothic Bold"),local("MalgunGothicBold"),local("맑은 고딕 Bold");font-weight:700}
+@font-face{font-family:"PX Sheet";src:local("Malgun Gothic"),local("MalgunGothic"),local("맑은 고딕");font-weight:400}
+@font-face{font-family:"PX Sheet";src:local("Malgun Gothic Bold"),local("MalgunGothicBold"),local("맑은 고딕 Bold");font-weight:700}
 
 /* ------------------------------------------------------------ 공통 */
 *,*::before,*::after{box-sizing:border-box}
@@ -123,7 +123,7 @@ input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-ou
 .toolbar>select.inp{min-width:140px}
 .foot-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
 
-/* 엑셀형 표 (data-sheet): 맑은 고딕 13px, 24px 행, 격자선. 머리글 띠는 이 표만 예외 */
+/* 엑셀형 표: 맑은 고딕 13px, 24px 행, 격자선, 머리글 띠 */
 .xg{border:1px solid var(--control);border-radius:var(--r-ctl);overflow:hidden;background:#fff;font-family:var(--sheet-font);font-size:13px;color:#000}
 .xg-scroll{position:relative;overflow:auto}
 .xg-scroll.cart{max-height:344px}
@@ -191,7 +191,7 @@ select.ci{padding-right:2px;cursor:pointer}
 
 /* 떠 있는 요소: 그림자는 여기에만 */
 #toasts{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:900;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
-.toast{min-width:300px;max-width:520px;background:#fff;border:1px solid var(--edge);border-radius:var(--r-panel);box-shadow:var(--float); /* hallmark-ignore: 떠 있는 요소 */
+.toast{min-width:300px;max-width:520px;background:#fff;border:1px solid var(--edge);border-radius:var(--r-panel);box-shadow:var(--float);
   padding:10px 14px;font-size:13px;color:var(--ink-2);opacity:0;transition:opacity .2s ease-out;display:flex;align-items:center;gap:8px}
 .toast.in{opacity:1}
 .toast b{color:var(--ink);font-size:14px;font-weight:600}
@@ -199,7 +199,7 @@ select.ci{padding-right:2px;cursor:pointer}
 .dlg-root{position:fixed;inset:0;z-index:800}
 .dlg-bg{position:absolute;inset:0;background:rgba(17,17,17,.32)}
 .dlg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(480px,calc(100vw - 32px));max-height:calc(100vh - 48px);display:flex;flex-direction:column;
-  background:#fff;border-radius:12px;border:1px solid var(--edge);box-shadow:var(--float)} /* hallmark-ignore: 떠 있는 요소 */
+  background:#fff;border-radius:12px;border:1px solid var(--edge);box-shadow:var(--float)}
 .dlg-h{padding:18px 20px 6px}
 .dlg-h h2{font-size:16px;font-weight:600}
 .dlg-b{padding:4px 20px 16px;overflow:auto;font-size:14px;color:var(--ink-2);line-height:1.6;display:flex;flex-direction:column;gap:12px}
@@ -302,7 +302,7 @@ select.ci{padding-right:2px;cursor:pointer}
   <main class="main" id="main">
 
     <!-- 화면 1: 견적. 질문: 이 장바구니로 얼마를 아끼는가 -->
-    <section class="view page" data-hm-view="quote" id="v-quote" aria-labelledby="h-quote">
+    <section class="view page" data-view="quote" id="v-quote" aria-labelledby="h-quote">
       <div class="pg-head">
         <div class="l">
           <h1 class="t" id="h-quote" tabindex="-1">견적</h1>
@@ -326,7 +326,7 @@ select.ci{padding-right:2px;cursor:pointer}
             <button class="btn btn-t sm" type="button" id="clearCartBtn" onclick="clearCart()">장바구니 비우기</button>
           </div>
           <div id="cartState"></div>
-          <div class="xg" id="cartSheet" data-sheet hidden>
+          <div class="xg" id="cartSheet" hidden>
             <div class="xg-scroll cart" role="region" aria-label="장바구니 시트">
               <table class="sh t-cart">
                 <colgroup><col style="width:34px"><col><col class="c-qty"><col style="width:72px"><col style="width:124px"><col style="width:88px"><col style="width:150px"><col style="width:88px"><col style="width:64px"><col style="width:36px"></colgroup>
@@ -355,7 +355,7 @@ select.ci{padding-right:2px;cursor:pointer}
             <span class="mini" id="catCount" aria-live="polite"></span>
           </div>
           <div id="catState"></div>
-          <div class="xg" id="catSheet" data-sheet hidden>
+          <div class="xg" id="catSheet" hidden>
             <div class="xg-scroll cat" role="region" aria-label="상품 목록 시트">
               <table class="sh t-cat">
                 <colgroup><col style="width:34px"><col><col style="width:96px"><col style="width:72px"><col style="width:124px"><col style="width:80px"><col style="width:64px"><col style="width:56px"><col style="width:64px"></colgroup>
@@ -373,7 +373,7 @@ select.ci{padding-right:2px;cursor:pointer}
     </section>
 
     <!-- 화면 2: 상품 등록. 질문: 어떤 상품의 가격을 고칠 것인가 -->
-    <section class="view page" data-hm-view="admin" id="v-admin" aria-labelledby="h-admin" hidden>
+    <section class="view page" data-view="admin" id="v-admin" aria-labelledby="h-admin" hidden>
       <div class="pg-head">
         <div class="l">
           <h1 class="t" id="h-admin" tabindex="-1">상품 등록</h1>
@@ -428,7 +428,7 @@ select.ci{padding-right:2px;cursor:pointer}
             <span class="mini" id="adminCount" aria-live="polite"></span>
           </div>
           <div id="adminState"></div>
-          <div class="xg" id="adminSheet" data-sheet hidden>
+          <div class="xg" id="adminSheet" hidden>
             <div class="xg-scroll adm" role="region" aria-label="등록된 상품 시트">
               <table class="sh t-adm">
                 <colgroup><col style="width:34px"><col><col style="width:140px"><col style="width:100px"><col style="width:136px"><col style="width:84px"><col style="width:70px"><col style="width:40px"></colgroup>
@@ -974,12 +974,12 @@ async function addProduct(e){
   }
 }
 
-/* ===== 화면 전환 (주소 #quote, #admin / window.hmShow) ===== */
+/* ===== 화면 전환 (주소 #quote, #admin / window.showView) ===== */
 const VIEWS = ["quote", "admin"];
 const TITLES = { quote: "견적", admin: "상품 등록" };
 function show(v, focus){
   if (!VIEWS.includes(v)) v = "quote";
-  $$(".view").forEach(s => { s.hidden = s.dataset.hmView !== v; });
+  $$(".view").forEach(s => { s.hidden = s.dataset.view !== v; });
   $$(".nav-i[data-v]").forEach(a => {
     if (a.dataset.v === v) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
   });
@@ -989,7 +989,7 @@ function show(v, focus){
   if (focus && h) h.focus({ preventScroll: true });
 }
 function route(focus){ show(decodeURIComponent(location.hash.slice(1)).split("/")[0] || "quote", focus); }
-window.hmShow = function (v){ if (location.hash.slice(1) !== v) location.hash = v; else route(false); };
+window.showView = function (v){ if (location.hash.slice(1) !== v) location.hash = v; else route(false); };
 window.addEventListener("hashchange", () => route(true));
 
 /* ===== 대화상자 (설정, 비밀번호, 확인, 입력) ===== */

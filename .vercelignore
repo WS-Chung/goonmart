@@ -1,7 +1,6 @@
 # Vercel 배포물에서 제외할 파일 (앱 동작에는 index.html 하나만 필요)
-# 문서·DB 셋업·시드 데이터·사내 디자인 규칙이 https://<project>.vercel.app/<파일명> 으로 노출되지 않게 함
+# 문서·DB 셋업·시드 데이터가 https://<project>.vercel.app/<파일명> 으로 노출되지 않게 함
 README.md
 CLAUDE.md
 supabase_init.sql
 px_products.csv
-DA_UI_hallmark/
